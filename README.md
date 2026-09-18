@@ -39,6 +39,8 @@ cd zcode-snapshot-guard
 .\ZcodeSnapshotGuard.ps1 install
 ```
 
+> 💡 **国内网络提示**：`raw.githubusercontent.com` 直连可能超时。可在 URL 前加任意加速前缀（如 `https://ghproxy.net/` + 原始地址），或直接用方式二 `git clone` / 网页下载 ZIP。
+
 安装完成后建议重启一次 ZCode，然后随时用 `status` 检查防线状态。
 
 ---
@@ -46,14 +48,14 @@ cd zcode-snapshot-guard
 ## 🧱 双防线原理
 
 ```
-┌─ 第一层：ACL 拒写（主防线）──────────────────────────┐
+┌─ 第一层：ACL 拒写（主防线）──────────────────────┐
 │  对 %USERPROFILE%\.zcode\v2\checkpoints              │
 │  施加 Deny (WD,AD)：ZCode 连第一个字节都写不进去，      │
 │  快照流水线在「落盘」一步操作系统级失败。               │
 │  ★ 不存在删除竞态窗口；仅拒绝当前用户，属文件属主权利，  │
 │    无需管理员。                                       │
 └──────────────────────────────────────────────┘
-┌─ 第二层：歼灭哨兵（兜底）─────────────────────────────┐
+┌─ 第二层：歼灭哨兵（兑底）─────────────────────────┐
 │  后台常驻（开机自启、单实例互斥），每 5 秒扫描           │
 │  %USERPROFILE%\.zcode：                                │
 │   • 任意 checkpoints\ 或 pending\ 目录内的文件          │
@@ -79,12 +81,11 @@ cd zcode-snapshot-guard
 `status` 输出示例：
 
 ```
-[*] data root      : C:\Users\you\.zcode
-[+] ACL deny       : ACTIVE  (checkpoints 不可写)
-[+] autostart      : installed
-[+] sentinel       : running (pid 13164)
-[*] artifacts      : 0 个快照残留
-[*] log tail       : [2026-09-18 19:47:58] deleted: ...\pending\....tar.gz.enc
+[*] data root   : C:\Users\you\.zcode
+[+] layer 1 ACL     : ACTIVE (checkpoints is write-denied)
+[+] autostart       : installed
+[+] layer 2 sentinel: running (pid 13164)
+[*] artifacts   : 0 snapshot file(s) currently on disk
 ```
 
 ## 🕵️ 抓现行
@@ -115,7 +116,7 @@ cd zcode-snapshot-guard
 
 ## 🪤 已知局限（必读）
 
-1. **厂商控制客户端**。理论上后续版本可以更换存储路径、修改文件名，甚至由更新程序重置 ACL。哨兵的通配模式可兜住大部分变化，但不是绝对——每次 ZCode 大版本更新后请跑一次 `status`。
+1. **厂商控制客户端**。理论上后续版本可以更换存储路径、修改文件名，甚至由更新程序重置 ACL。哨兵的通配模式可兑住大部分变化，但不是绝对——每次 ZCode 大版本更新后请跑一次 `status`。
 2. **本地检查点 / 历史回滚功能会一并失效**（快照写不进去，自然无法回滚）——这正是本工具的目的。
 3. **不覆盖遥测通道**（设备号、日活、OTLP/RUM 上报），网络层请配合上面的可选项。
 4. **版本注意**：官方 9/18 才回应「已修复」，而 3.12.3 构建于 9/16——修复大概率不在该包内。升级后请保留本防线并观察日志。
