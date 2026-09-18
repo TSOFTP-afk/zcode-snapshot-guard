@@ -105,18 +105,42 @@ function Install-Autostart {
 }
 
 function Start-Sentinel {
-  $existing = Get-SentinelPidr
+  $existing = Get-SentinelPid
   if ($existing) { Write-Ok ("Sentinel already running (pid " + $existing + ")"); return }
   $engine = (Get-Process -Id $PID).Path
   if (-not $engine) { $engine = Join-Path $env:SystemRoot 'System32\WindowsPowerShell\v1.0\powershell.exe' }
   Start-Process -FilePath $engine -ArgumentList @('-NoProfile','-ExecutionPolicy','Bypass','-WindowStyle','Hidden','-File',("'" + $ScriptFile + "'"),'-Action','run','-Root',("'" + $Root + "'")) -WindowStyle Hidden
   Start-Sleep -Seconds 2
-  $now = Get-SentinelPidr
+  $now = Get-SentinelPid
   if ($now) { Write-Ok ("Sentinel started (pid " + $now + ")") } else { Write-Bad "Sentinel failed to start (check log)." }
 }
 
 function Show-Status {
-  Write-Info ("data root : " + $Root + (Test-Path -LiteralPath $Root ? ' [exists]' : ' [missing]'))
+  Write-Info ("data root   : " + $Root)
+  $cpExists = Test-Path -LiteralPath $Checkpoints
+  $cpState = 'missing (created on demand)'
+  if ($cpExists) { $cpState = 'present' }
+  Write-Info ("checkpoints : " + $cpState)
+  if (Test-AclDenyActive) { Write-Ok  "layer 1 ACL     : ACTIVE (checkpoints is write-denied)" }
+  else                    { Write-Bad "layer 1 ACL     : NOT active (run: install)" }
+  if (Test-Path -LiteralPath $StartupCmd) { Write-Ok "autostart       : installed" }
+  else { Write-Bad "autostart       : not installed" }
+  $spid = Get-SentinelPid
+  if ($spid) { Write-Ok ("layer 2 sentinel: running (pid " + $spid + ")") }
+  else { Write-Bad "layer 2 sentinel: not running" }
+  $n = 0
+  if (Test-Path -LiteralPath $Root) {
+    $all = Get-ChildItem -LiteralPath $Root -Recurse -Force -File -ErrorAction SilentlyContinue
+    foreach ($f in $all) {
+      if (($f.FullName -like '*\checkpoints\*') -or ($f.FullName -like '*\pending\*') -or
+          ($f.Name -like '*.tar.gz.enc') -or ($f.Name -like '*.envelope.json')) { $n++ }
+    }
+  }
+  Write-Info ("artifacts   : " + $n + " snapshot file(s) currently on disk")
+  if (Test-Path -LiteralPath $GuardLog) {
+    Write-Info "log tail:"
+    Get-Content -LiteralPath $GuardLog -Tail 5 -ErrorAction SilentlyContinue | ForEach-Object { Write-Host ("    " + $_) }
+  }
 }
 
 switch ($Action) {
@@ -136,10 +160,10 @@ switch ($Action) {
     if ($spid) { Stop-Process -Id $spid -Force; Write-Info ("sentinel stopped (pid " + $spid + ")") }
     if (Test-Path -LiteralPath $StartupCmd) { Remove-Item -LiteralPath $StartupCmd -Force; Write-Info "autostart removed." }
     Disable-AclDeny
-    Write-Ok "uninstall complete. Log kept at: " + $GuardLog
+    Write-Ok ("uninstall complete. Log kept at: " + $GuardLog)
   }
   'run'       {
-    $created = $falser
+    $created = $false
     $mutex = New-Object System.Threading.Mutex($true, 'Local\zcode-snapshot-guard', [ref]$created)
     if (-not $created) { exit 0 }
     function Write-GuardLog([string]$m) {
