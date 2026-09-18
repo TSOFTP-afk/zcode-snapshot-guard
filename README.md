@@ -1,5 +1,8 @@
 # ZCode Snapshot Guard（快照歼灭哨兵）
 
+> ⭐ **本项目已升级并泛化为 [agent-snapshot-guard](https://github.com/TSOFTP-afk/agent-snapshot-guard)** —— 规则驱动的 AI 编程工具通用隐私哨兵（已支持 Claude Code / Cursor / Trae / Windsurf + 社区自定义规则）。
+> 本仓库保留作为 ZCode 事件的起源记录与专项防线，仍然可用可维护。
+
 > 🛡️ 针对智谱 ZCode 桌面客户端「静默打包整个工作区（含完整 `.git` 历史）并尝试上传云端」问题的本地双防线工具。
 > **普通用户权限即可部署，无需管理员。** 纯防御用途，不修改 ZCode 本体。
 
@@ -11,7 +14,7 @@
 
 - 应用内 **没有任何开关可以关闭** 该行为；
 - 「优化计划」开关（仅控制训练用途）**关闭后依然打包上传**；
-- 官方随后回应称源于「代码库索引 / Repo Wiki」功能，称已修复，并承诺开源（[官方回应全文](https://forum.trae.cn/t/topic/181727)）。
+- 官方随后回应称源于「代码库索引 / Repo Wiki」功能，称已修复，并承诺开源（[官方回应全文](https://forum.trae.cn/t/topic/181727)；后续报道：[IT之家](https://www.ithome.com/1/004/310.htm)、[腾讯新闻](https://news.qq.com/rain/a/20260918A09XAY00)）。
 
 媒体报道与讨论：
 
@@ -20,7 +23,7 @@
 - [V2EX 讨论](https://global.v2ex.co/t/1242957#reply0) · [大佬说讨论](https://locdd.com/t/topic/92383)
 - 逆向分析原文：[ferstar 的博客](https://blog.ferstar.org/posts/zcode-silent-workspace-snapshot-upload/)
 
-> 详细技术取证（已脱敏）见 [docs/EVIDENCE.md](docs/EVIDENCE.md)。
+> 详细技术取证（已脱敏，新版仓库同步维护）见新版仓库 [docs/EVIDENCE-zcode.md](https://github.com/TSOFTP-afk/agent-snapshot-guard/blob/main/docs/EVIDENCE-zcode.md)。
 
 ---
 
